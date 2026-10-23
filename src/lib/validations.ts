@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ACCEPTED_IMAGE_TYPES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB } from './constants';
+import { validatePublicUrl } from '@/server/security/ssrf';
 
 export const imageMetadataSchema = z.object({
   fileName: z
@@ -26,7 +27,6 @@ export const imageMetadataSchema = z.object({
     .string()
     .trim()
     .regex(/^[a-f0-9]{64}$/i, 'Must be a valid 64-character SHA-256 hexadecimal string'),
-  previewDataUrl: z.string().optional(),
 });
 
 export const createCaseSchema = z.object({
@@ -47,8 +47,8 @@ export const createCaseSchema = z.object({
   width: imageMetadataSchema.shape.width,
   height: imageMetadataSchema.shape.height,
   sha256Hash: imageMetadataSchema.shape.sha256Hash,
-  previewDataUrl: imageMetadataSchema.shape.previewDataUrl,
   isSyntheticFixture: z.boolean().optional().default(false),
+  ownerId: z.string().trim().max(64).optional(),
 });
 
 export type CreateCaseSchemaInput = z.infer<typeof createCaseSchema>;
@@ -70,7 +70,13 @@ export const createReportSchema = z.object({
     .min(3, 'Report title must be at least 3 characters')
     .max(140, 'Report title cannot exceed 140 characters')
     .optional(),
-  targetUrls: z.array(z.string().url('Invalid URL format')).optional(),
+  targetUrls: z
+    .array(
+      z.string().refine((url) => validatePublicUrl(url).isValid, {
+        message: 'Must be a valid public HTTP or HTTPS URL (internal and private IP destinations are forbidden).',
+      })
+    )
+    .optional(),
   noticeType: z
     .enum(['dmca_takedown', 'defamation_notice', 'privacy_violation', 'terms_of_service'])
     .optional()

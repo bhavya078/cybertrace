@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle } from '@/components/Card';
 import { Button } from '@/components/Button';
@@ -13,6 +13,7 @@ import {
   Lock,
   Sparkles,
   Info,
+  CheckCircle2,
 } from 'lucide-react';
 import { ACCEPTED_IMAGE_TYPES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB } from '@/lib/constants';
 import { formatBytes } from '@/lib/utils';
@@ -36,6 +37,15 @@ export default function InvestigatePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCalculatingHash, setIsCalculatingHash] = useState(false);
 
+  // Cleanup object URL on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   // Compute SHA-256 in browser using Web Crypto API
   const calculateSha256 = async (blob: Blob): Promise<string> => {
     const buffer = await blob.arrayBuffer();
@@ -44,10 +54,33 @@ export default function InvestigatePage() {
     return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
   };
 
+  // Verify file magic bytes on client before proceeding
+  const verifyMagicBytes = async (fileObj: File): Promise<boolean> => {
+    try {
+      const slice = await fileObj.slice(0, 12).arrayBuffer();
+      const bytes = new Uint8Array(slice);
+      if (bytes.length < 4) return false;
+
+      // JPEG: FF D8 FF
+      if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return true;
+      // PNG: 89 50 4E 47 0D 0A 1A 0A
+      if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return true;
+      // WebP: RIFF ... WEBP
+      if (
+        bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+        bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50
+      ) return true;
+
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
   const handleFileProcess = async (selectedFile: File) => {
     setError(null);
 
-    // Validate MIME type
+    // Validate declared MIME type
     if (!ACCEPTED_IMAGE_TYPES.includes(selectedFile.type as (typeof ACCEPTED_IMAGE_TYPES)[number])) {
       setError(`Invalid file format. Accepted types: ${ACCEPTED_IMAGE_TYPES.map((t) => t.replace('image/', '.')).join(', ')}`);
       return;
@@ -59,26 +92,34 @@ export default function InvestigatePage() {
       return;
     }
 
+    // Verify true magic byte signature
+    const isValidSignature = await verifyMagicBytes(selectedFile);
+    if (!isValidSignature) {
+      setError('File content signature does not match a genuine JPEG, PNG, or WebP image. Intake rejected.');
+      return;
+    }
+
+    // Revoke previous blob URL if needed
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
     setFile(selectedFile);
     setIsSynthetic(false);
     if (!title) {
       setTitle(`Investigation: ${selectedFile.name.replace(/\.[^/.]+$/, '')}`);
     }
 
-    // Generate browser preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setPreviewUrl(result);
+    // Ephemeral in-memory preview without server transmission
+    const objectUrl = URL.createObjectURL(selectedFile);
+    setPreviewUrl(objectUrl);
 
-      // Measure dimensions
-      const img = new Image();
-      img.onload = () => {
-        setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight });
-      };
-      img.src = result;
+    // Measure dimensions
+    const img = new Image();
+    img.onload = () => {
+      setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight });
     };
-    reader.readAsDataURL(selectedFile);
+    img.src = objectUrl;
 
     // Calculate SHA-256
     setIsCalculatingHash(true);
@@ -101,6 +142,9 @@ export default function InvestigatePage() {
 
   const handleSelectPreset = (preset: SyntheticFixturePreset) => {
     setError(null);
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
     setFile(null);
     setTitle(preset.name);
     setDescription(preset.description);
@@ -127,6 +171,7 @@ export default function InvestigatePage() {
     try {
       setIsSubmitting(true);
 
+      // Security & Privacy: We only transmit sanitized case metadata, zero image binaries or Base64 data URLs!
       const payload = {
         title: title.trim(),
         description: description.trim(),
@@ -136,7 +181,6 @@ export default function InvestigatePage() {
         width: imageDimensions?.width || 800,
         height: imageDimensions?.height || 800,
         sha256Hash: fileSha256,
-        previewDataUrl: previewUrl,
         isSyntheticFixture: isSynthetic,
       };
 
@@ -163,8 +207,8 @@ export default function InvestigatePage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Page Header */}
-      <div className="pb-6 border-b border-[#1f2636] space-y-2">
-        <div className="flex items-center gap-2 text-xs font-mono text-[#76b900]">
+      <div className="pb-6 border-b border-[#1b2230] space-y-2">
+        <div className="flex items-center gap-2 text-xs font-mono text-emerald-400">
           <ShieldCheck className="w-4 h-4" />
           <span>INTAKE & TRIAGE PROTOCOL</span>
         </div>
@@ -177,21 +221,21 @@ export default function InvestigatePage() {
       </div>
 
       {/* Ephemeral Privacy Notice */}
-      <div className="rounded-xl border border-[#232c3d] bg-[#0f131a] p-4 flex items-start gap-3">
-        <Lock className="w-5 h-5 text-[#76b900] shrink-0 mt-0.5" />
+      <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/10 p-4 flex items-start gap-3">
+        <Lock className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
         <div className="space-y-1 text-xs text-slate-300">
-          <div className="font-semibold text-white">Client-Side Privacy Guarantee</div>
+          <div className="font-semibold text-emerald-300">Client-Side Privacy Guarantee</div>
           <p className="text-slate-400 leading-relaxed">
-            Victim visual media is processed and previewed within your local browser sandbox. Only extracted mathematical indicators and the 64-character SHA-256 fingerprint are transmitted to the case record.
+            Victim visual media is processed and previewed within your local browser sandbox. Image binaries are <strong>never stored permanently on the server</strong>. Only extracted mathematical indicators and the 64-character SHA-256 fingerprint are transmitted to the case record.
           </p>
         </div>
       </div>
 
       {/* Synthetic Fixtures Carousel / Quick Selector */}
-      <Card className="border-[#283449] bg-[#0c1017]">
-        <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#192130]">
+      <Card className="border-[#222a3a] bg-[#0c0e14]">
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#181d28]">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#76b900]" />
+            <Sparkles className="w-4 h-4 text-emerald-400" />
             <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-200">
               Demo Test Fixtures (Zero-Risk Presets)
             </h3>
@@ -205,9 +249,9 @@ export default function InvestigatePage() {
               key={preset.id}
               type="button"
               onClick={() => handleSelectPreset(preset)}
-              className="text-left p-3 rounded-lg bg-[#121622] hover:bg-[#181d2c] border border-[#202738] hover:border-[#76b900]/40 transition-all group"
+              className="text-left p-3 rounded-lg bg-[#11141d] hover:bg-[#161c28] border border-[#1e2534] hover:border-emerald-500/40 transition-all group"
             >
-              <div className="font-semibold text-xs text-white group-hover:text-[#76b900] transition-colors">
+              <div className="font-semibold text-xs text-white group-hover:text-emerald-400 transition-colors">
                 {preset.name}
               </div>
               <div className="text-[11px] text-slate-400 line-clamp-2 mt-1">
@@ -227,7 +271,7 @@ export default function InvestigatePage() {
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
             className={`border-2 border-dashed flex flex-col items-center justify-center p-8 text-center transition-colors min-h-[320px] ${
-              previewUrl ? 'border-[#263144]' : 'border-[#2c384e] hover:border-[#76b900]/60'
+              previewUrl ? 'border-[#222a3a]' : 'border-[#283244] hover:border-emerald-500/60'
             }`}
           >
             <input
@@ -242,7 +286,7 @@ export default function InvestigatePage() {
               }}
             />
 
-            <div className="w-14 h-14 rounded-full bg-[#151924] border border-[#263144] flex items-center justify-center text-[#76b900] mb-4">
+            <div className="w-14 h-14 rounded-full bg-[#131722] border border-[#222a3a] flex items-center justify-center text-emerald-400 mb-4">
               <Upload className="w-6 h-6" />
             </div>
 
@@ -267,23 +311,23 @@ export default function InvestigatePage() {
           <Card className="flex flex-col justify-between">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <ImageIcon className="w-4 h-4 text-[#76b900]" />
+                <ImageIcon className="w-4 h-4 text-emerald-400" />
                 <CardTitle>Browser Sandbox Preview</CardTitle>
               </div>
               {isSynthetic && (
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#76b900]/15 text-[#76b900] border border-[#76b900]/30">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                   SYNTHETIC FIXTURE
                 </span>
               )}
             </CardHeader>
 
-            <div className="flex-1 flex items-center justify-center bg-[#090b10] rounded-lg border border-[#1b2230] p-4 min-h-[220px]">
+            <div className="flex-1 flex items-center justify-center bg-[#07090e] rounded-lg border border-[#171d27] p-4 min-h-[220px]">
               {previewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={previewUrl}
                   alt="Inspection target preview"
-                  className="max-h-56 max-w-full object-contain rounded border border-[#21293a]"
+                  className="max-h-56 max-w-full object-contain rounded border border-[#1e2533]"
                 />
               ) : (
                 <div className="text-center text-slate-400 text-xs space-y-1">
@@ -295,10 +339,13 @@ export default function InvestigatePage() {
 
             {/* Extracted Metadata Inspection */}
             {fileSha256 && (
-              <div className="mt-4 pt-3 border-t border-[#1a212e] space-y-1.5 text-[11px] font-mono">
+              <div className="mt-4 pt-3 border-t border-[#171d27] space-y-1.5 text-[11px] font-mono">
                 <div className="flex items-center justify-between text-slate-400">
-                  <span>SHA-256 Digest:</span>
-                  <span className="text-slate-200 truncate max-w-[240px]">{fileSha256}</span>
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>SHA-256 Digest:</span>
+                  </span>
+                  <span className="text-slate-200 truncate max-w-[220px]">{fileSha256}</span>
                 </div>
                 {imageDimensions && (
                   <div className="flex items-center justify-between text-slate-400">
@@ -325,7 +372,7 @@ export default function InvestigatePage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Suspected Manipulated Executive Avatar"
-              className="w-full px-3.5 py-2.5 rounded-lg bg-[#0c0f16] border border-[#202737] focus:border-[#76b900] focus:outline-none text-white text-sm placeholder:text-slate-400 transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-[#0a0d13] border border-[#1e2534] focus:border-emerald-500 focus:outline-none text-white text-sm placeholder:text-slate-400 transition-colors"
             />
           </div>
 
@@ -338,7 +385,7 @@ export default function InvestigatePage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add details regarding observed circulation context, platform origins, or suspected motive..."
-              className="w-full px-3.5 py-2.5 rounded-lg bg-[#0c0f16] border border-[#202737] focus:border-[#76b900] focus:outline-none text-white text-sm placeholder:text-slate-400 transition-colors resize-none"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-[#0a0d13] border border-[#1e2534] focus:border-emerald-500 focus:outline-none text-white text-sm placeholder:text-slate-400 transition-colors resize-none"
             />
           </div>
         </Card>
@@ -355,7 +402,7 @@ export default function InvestigatePage() {
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <Info className="w-4 h-4 text-slate-400" />
-            <span>Submission registers a case with initial status: &apos;Analysis pending&apos;.</span>
+            <span>Submission registers a case with initial status: &apos;Analysis pending&apos;. Uploading does not imply guilt or proven tampering.</span>
           </div>
 
           <Button

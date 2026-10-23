@@ -115,7 +115,7 @@ export class MockForensicService implements IForensicService {
       overallVerdict = 'inconclusive';
       confidenceScore = 0.65;
       explanation =
-        'Preliminary heuristic inspection completed. Image exhibits standard web recompression. Further multi-model inspection via dedicated NVIDIA vision checkpoints recommended for definitive adjudication.';
+        'Preliminary heuristic inspection completed. Image exhibits standard web recompression. Multi-model inspection via dedicated forensic vision checkpoints recommended for definitive adjudication.';
       indicators.push(
         {
           id: generateId('ind'),
@@ -147,14 +147,14 @@ export class MockForensicService implements IForensicService {
       indicators,
       explanation,
       limitations: [
-        'Demo analysis: Generated via deterministic mock forensic heuristics.',
-        'Production integration requires connecting verified NVIDIA models via Nebius Token Factory.',
-        'Forensic indicators provide probabilistic signals and should be verified by a qualified analyst prior to legal action.',
+        'Deterministic heuristic analysis: Evaluated using baseline algorithmic tests.',
+        'Production deployment supports plugging in external vision models behind the IForensicService interface.',
+        'Forensic indicators provide probabilistic signals and should be verified by a qualified human analyst prior to legal action.',
       ],
       modelInfo: {
-        provider: 'CyberTrace Mock Heuristic Engine (NVIDIA Architecture Ready)',
-        modelName: 'mock-forensics-analyzer-v1',
-        version: '1.0.0-mock',
+        provider: 'CyberTrace Forensic Heuristic Engine (v1.0)',
+        modelName: 'forensic-heuristic-v1',
+        version: '1.0.0',
         isMock: true,
       },
     };

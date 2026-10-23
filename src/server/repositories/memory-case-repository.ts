@@ -2,6 +2,7 @@ import { Case, CreateCaseInput } from '@/types';
 import { ICaseRepository, FindCasesOptions } from './case-repository.interface';
 import { INITIAL_DEMO_CASES } from '@/lib/fixtures';
 import { generateId } from '@/lib/utils';
+import { DEFAULT_DEV_INVESTIGATOR } from '@/server/security/auth';
 
 export class MemoryCaseRepository implements ICaseRepository {
   private cases: Map<string, Case> = new Map();
@@ -9,13 +10,22 @@ export class MemoryCaseRepository implements ICaseRepository {
   constructor(seedWithFixtures: boolean = true) {
     if (seedWithFixtures) {
       for (const item of INITIAL_DEMO_CASES) {
-        this.cases.set(item.id, JSON.parse(JSON.stringify(item)));
+        this.cases.set(item.id, {
+          ...JSON.parse(JSON.stringify(item)),
+          ownerId: DEFAULT_DEV_INVESTIGATOR,
+        });
       }
     }
   }
 
   async findAll(options?: FindCasesOptions): Promise<Case[]> {
     let result = Array.from(this.cases.values());
+
+    if (options?.ownerId) {
+      result = result.filter(
+        (c) => !c.ownerId || c.ownerId === options.ownerId || c.isSyntheticFixture
+      );
+    }
 
     if (options?.status) {
       result = result.filter((c) => c.status === options.status);
@@ -57,6 +67,7 @@ export class MemoryCaseRepository implements ICaseRepository {
 
     const newCase: Case = {
       id,
+      ownerId: input.ownerId || DEFAULT_DEV_INVESTIGATOR,
       title: input.title,
       description: input.description,
       status: 'analysis_pending',
@@ -70,7 +81,6 @@ export class MemoryCaseRepository implements ICaseRepository {
         width: input.width,
         height: input.height,
         sha256Hash: input.sha256Hash,
-        previewDataUrl: input.previewDataUrl,
       },
       reports: [],
     };
@@ -100,7 +110,10 @@ export class MemoryCaseRepository implements ICaseRepository {
   async resetToFixtures(): Promise<void> {
     this.cases.clear();
     for (const item of INITIAL_DEMO_CASES) {
-      this.cases.set(item.id, JSON.parse(JSON.stringify(item)));
+      this.cases.set(item.id, {
+        ...JSON.parse(JSON.stringify(item)),
+        ownerId: DEFAULT_DEV_INVESTIGATOR,
+      });
     }
   }
 }

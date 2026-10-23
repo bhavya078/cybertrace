@@ -78,7 +78,7 @@ export class MockGuardianService implements IGuardianService {
       verificationDisclaimer:
         'CyberTrace generated this draft report for human legal review. CyberTrace never claims that a hosting provider has removed content without explicit third-party verification.',
       generatedBy: {
-        provider: 'CyberTrace Guardian Mock Engine (NVIDIA Nemotron LLM Ready)',
+        provider: 'CyberTrace Guardian Compliance Drafter (v1.0)',
         isMock: true,
       },
     };

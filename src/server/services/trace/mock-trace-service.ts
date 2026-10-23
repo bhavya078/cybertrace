@@ -56,7 +56,7 @@ export class MockTraceService implements ITraceService {
         'Scores reflect computed visual distance metrics and do not prove original source ownership.',
       ],
       providerInfo: {
-        provider: 'CyberTrace Mock Trace Provider (NVIDIA Multimodal Embedding Ready)',
+        provider: 'CyberTrace Reverse Match Provider (Simulation v1.0)',
         isMock: true,
       },
     };

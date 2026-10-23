@@ -4,6 +4,7 @@ import { Case, CreateCaseInput } from '@/types';
 import { ICaseRepository, FindCasesOptions } from './case-repository.interface';
 import { INITIAL_DEMO_CASES } from '@/lib/fixtures';
 import { generateId } from '@/lib/utils';
+import { DEFAULT_DEV_INVESTIGATOR } from '@/server/security/auth';
 
 export class FileCaseRepository implements ICaseRepository {
   private filePath: string;
@@ -23,8 +24,11 @@ export class FileCaseRepository implements ICaseRepository {
     }
 
     if (!fs.existsSync(this.filePath)) {
-      // Seed with demo cases for initial out-of-the-box exploration
-      const initial = INITIAL_DEMO_CASES;
+      // Seed with initial demo cases
+      const initial = INITIAL_DEMO_CASES.map((c) => ({
+        ...c,
+        ownerId: DEFAULT_DEV_INVESTIGATOR,
+      }));
       await fs.promises.writeFile(this.filePath, JSON.stringify(initial, null, 2), 'utf-8');
     }
 
@@ -35,7 +39,17 @@ export class FileCaseRepository implements ICaseRepository {
     await this.ensureInitialized();
     try {
       const content = await fs.promises.readFile(this.filePath, 'utf-8');
-      return JSON.parse(content) as Case[];
+      const parsed = JSON.parse(content) as Case[];
+      // Privacy sanitation: strip any legacy Base64 preview data URLs from memory
+      return parsed.map((c) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const metadata = { ...c.imageMetadata } as any;
+        delete metadata.previewDataUrl;
+        return {
+          ...c,
+          imageMetadata: metadata,
+        };
+      });
     } catch {
       return INITIAL_DEMO_CASES;
     }
@@ -44,12 +58,30 @@ export class FileCaseRepository implements ICaseRepository {
   private async writeAllCases(cases: Case[]): Promise<void> {
     await this.ensureInitialized();
     const tempPath = `${this.filePath}.tmp.${Date.now()}`;
-    await fs.promises.writeFile(tempPath, JSON.stringify(cases, null, 2), 'utf-8');
+    // Strip any raw image binaries or Base64 data URLs before writing to disk
+    const sanitizedCases = cases.map((c) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const metadata = { ...c.imageMetadata } as any;
+      delete metadata.previewDataUrl;
+      return {
+        ...c,
+        imageMetadata: metadata,
+      };
+    });
+
+    await fs.promises.writeFile(tempPath, JSON.stringify(sanitizedCases, null, 2), 'utf-8');
     await fs.promises.rename(tempPath, this.filePath);
   }
 
   async findAll(options?: FindCasesOptions): Promise<Case[]> {
     let list = await this.readAllCases();
+
+    // Owner authorization filter
+    if (options?.ownerId) {
+      list = list.filter(
+        (c) => !c.ownerId || c.ownerId === options.ownerId || c.isSyntheticFixture
+      );
+    }
 
     if (options?.status) {
       list = list.filter((c) => c.status === options.status);
@@ -91,6 +123,7 @@ export class FileCaseRepository implements ICaseRepository {
 
     const newCase: Case = {
       id,
+      ownerId: input.ownerId || DEFAULT_DEV_INVESTIGATOR,
       title: input.title,
       description: input.description,
       status: 'analysis_pending',
@@ -104,7 +137,6 @@ export class FileCaseRepository implements ICaseRepository {
         width: input.width,
         height: input.height,
         sha256Hash: input.sha256Hash,
-        previewDataUrl: input.previewDataUrl,
       },
       reports: [],
     };
@@ -139,6 +171,10 @@ export class FileCaseRepository implements ICaseRepository {
   }
 
   async resetToFixtures(): Promise<void> {
-    await this.writeAllCases(INITIAL_DEMO_CASES);
+    const initial = INITIAL_DEMO_CASES.map((c) => ({
+      ...c,
+      ownerId: DEFAULT_DEV_INVESTIGATOR,
+    }));
+    await this.writeAllCases(initial);
   }
 }

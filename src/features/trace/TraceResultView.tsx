@@ -22,8 +22,8 @@ export function TraceResultView({ result }: TraceResultViewProps) {
   return (
     <div className="space-y-6">
       {/* Provider disclaimer */}
-      <div className="rounded-lg border border-[#2b3548] bg-[#121620] p-4 flex items-start gap-3">
-        <Radio className="w-5 h-5 text-[#76b900] shrink-0 mt-0.5" />
+      <div className="rounded-lg border border-[#232a38] bg-[#10141e] p-4 flex items-start gap-3">
+        <Radio className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
         <div className="space-y-1 text-xs">
           <div className="flex items-center gap-2 font-medium text-slate-200">
             <span>Trace Engine: {result.providerInfo.provider}</span>
@@ -44,7 +44,7 @@ export function TraceResultView({ result }: TraceResultViewProps) {
         <CardHeader>
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-[#76b900]" />
+              <Globe className="w-4 h-4 text-emerald-400" />
               <CardTitle>Discovered Candidate Matches ({result.matches.length})</CardTitle>
             </div>
             <span className="text-xs font-mono text-slate-400">
@@ -62,11 +62,11 @@ export function TraceResultView({ result }: TraceResultViewProps) {
             {result.matches.map((match) => (
               <div
                 key={match.id}
-                className="p-4 rounded-lg bg-[#0e1118] border border-[#1e2433] hover:border-[#2b3548] transition-colors space-y-3"
+                className="p-4 rounded-lg bg-[#0c0e14] border border-[#1b212d] hover:border-[#2a3447] transition-colors space-y-3"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-mono font-semibold text-white px-2 py-0.5 rounded bg-[#171c26] border border-[#273247]">
+                    <span className="text-xs font-mono font-semibold text-white px-2 py-0.5 rounded bg-[#151922] border border-[#232a39]">
                       {match.domain}
                     </span>
                     <span className="text-[11px] font-mono text-slate-400 uppercase px-2 py-0.5 rounded bg-black/40 border border-slate-800">
@@ -80,12 +80,12 @@ export function TraceResultView({ result }: TraceResultViewProps) {
                   {/* Similarity score */}
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <div className="text-xs font-mono text-[#76b900] font-bold">
+                      <div className="text-xs font-mono text-emerald-400 font-bold">
                         {(match.similarityScore * 100).toFixed(0)}% Similarity
                       </div>
                     </div>
                     {match.isTakedownEligible && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-950/50 text-[#76b900] border border-emerald-800/60">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-950/50 text-emerald-300 border border-emerald-800/60">
                         TAKEDOWN ELIGIBLE
                       </span>
                     )}
@@ -93,7 +93,7 @@ export function TraceResultView({ result }: TraceResultViewProps) {
                 </div>
 
                 {/* Target URL with copy action */}
-                <div className="flex items-center gap-2 bg-[#090b10] px-3 py-2 rounded border border-[#1a202c]">
+                <div className="flex items-center gap-2 bg-[#080a0e] px-3 py-2 rounded border border-[#181d28]">
                   <span className="text-xs font-mono text-slate-300 truncate flex-1">
                     {match.url}
                   </span>
@@ -103,7 +103,7 @@ export function TraceResultView({ result }: TraceResultViewProps) {
                     title="Copy URL"
                   >
                     {copiedId === match.id ? (
-                      <Check className="w-3.5 h-3.5 text-[#76b900]" />
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
                     ) : (
                       <Copy className="w-3.5 h-3.5" />
                     )}
@@ -121,7 +121,7 @@ export function TraceResultView({ result }: TraceResultViewProps) {
 
                 {match.sourceContext && (
                   <p className="text-xs text-slate-400">
-                    <span className="text-slate-400">Context:</span> {match.sourceContext}
+                    <span className="text-slate-300">Context:</span> {match.sourceContext}
                   </p>
                 )}
               </div>

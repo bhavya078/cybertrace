@@ -62,7 +62,7 @@ export function GuardianReportView({
 
       {reports.length === 0 ? (
         <Card className="text-center py-12 space-y-4">
-          <div className="w-12 h-12 rounded-full bg-[#181d28] border border-[#262f40] flex items-center justify-center mx-auto text-[#76b900]">
+          <div className="w-12 h-12 rounded-full bg-[#141822] border border-[#222938] flex items-center justify-center mx-auto text-emerald-400">
             <Shield className="w-6 h-6" />
           </div>
           <div className="space-y-1">
@@ -92,8 +92,8 @@ export function GuardianReportView({
                   onClick={() => setSelectedReportId(rep.id)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors shrink-0 ${
                     activeReport?.id === rep.id
-                      ? 'bg-[#1b2230] text-white border-[#76b900]/50'
-                      : 'bg-[#11141b] text-slate-400 border-[#202634] hover:text-white'
+                      ? 'bg-[#171c26] text-white border-emerald-500/50'
+                      : 'bg-[#10131b] text-slate-400 border-[#1e2432] hover:text-white'
                   }`}
                 >
                   Report #{idx + 1} ({formatDate(rep.createdAt).split(',')[0]})
@@ -121,7 +121,7 @@ export function GuardianReportView({
                 <CardHeader>
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-2">
-                      <Scale className="w-4 h-4 text-[#76b900]" />
+                      <Scale className="w-4 h-4 text-emerald-400" />
                       <CardTitle>{activeReport.title}</CardTitle>
                     </div>
                     <div className="flex items-center gap-2">
@@ -134,14 +134,14 @@ export function GuardianReportView({
                 <div className="space-y-4 text-xs">
                   <div>
                     <span className="text-slate-400 block mb-1">Executive Summary</span>
-                    <p className="text-slate-200 bg-[#0e1118] p-3 rounded-lg border border-[#1e2433]">
+                    <p className="text-slate-200 bg-[#0c0e14] p-3 rounded-lg border border-[#1b212d]">
                       {activeReport.summary}
                     </p>
                   </div>
 
                   <div>
                     <span className="text-slate-400 block mb-1">Legal & Regulatory Basis</span>
-                    <p className="text-slate-300 font-mono text-[11px] bg-[#0e1118] p-3 rounded-lg border border-[#1e2433]">
+                    <p className="text-slate-300 font-mono text-[11px] bg-[#0c0e14] p-3 rounded-lg border border-[#1b212d]">
                       {activeReport.legalBasis}
                     </p>
                   </div>
@@ -153,9 +153,9 @@ export function GuardianReportView({
                       {activeReport.evidenceSummary.map((ev, i) => (
                         <li
                           key={i}
-                          className="flex items-center gap-2 text-slate-300 bg-[#0e1118] px-3 py-1.5 rounded border border-[#1a202c]"
+                          className="flex items-center gap-2 text-slate-300 bg-[#0c0e14] px-3 py-1.5 rounded border border-[#181d28]"
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#76b900]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                           <span>{ev}</span>
                         </li>
                       ))}
@@ -174,7 +174,7 @@ export function GuardianReportView({
                   {activeReport.notices.map((notice, idx) => (
                     <div
                       key={idx}
-                      className="p-3.5 rounded-lg bg-[#0e1118] border border-[#1e2433] space-y-2 text-xs"
+                      className="p-3.5 rounded-lg bg-[#0c0e14] border border-[#1b212d] space-y-2 text-xs"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -204,11 +204,11 @@ export function GuardianReportView({
               <Card>
                 <div className="flex items-center justify-between mb-3 pb-3 border-b border-[#1c2230]">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#76b900]" />
+                    <FileText className="w-4 h-4 text-emerald-400" />
                     <h4 className="text-sm font-semibold text-white">Draft Removal Letter Preview</h4>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={handleCopyLetter} icon={copied ? <Check className="w-3.5 h-3.5 text-[#76b900]" /> : <Copy className="w-3.5 h-3.5" />}>
+                    <Button variant="outline" size="sm" onClick={handleCopyLetter} icon={copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}>
                       {copied ? 'Copied' : 'Copy Text'}
                     </Button>
                     <Button variant="secondary" size="sm" onClick={handleDownload} icon={<Download className="w-3.5 h-3.5" />}>
@@ -217,7 +217,7 @@ export function GuardianReportView({
                   </div>
                 </div>
 
-                <pre className="p-4 rounded-lg bg-[#07090e] border border-[#1a202c] text-slate-300 font-mono text-xs whitespace-pre-wrap leading-relaxed overflow-x-auto max-h-96">
+                <pre className="p-4 rounded-lg bg-[#07090e] border border-[#181d28] text-slate-300 font-mono text-xs whitespace-pre-wrap leading-relaxed overflow-x-auto max-h-96">
                   {activeReport.takedownLetterDraft}
                 </pre>
               </Card>

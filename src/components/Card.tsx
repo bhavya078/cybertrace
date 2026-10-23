@@ -10,8 +10,8 @@ export function Card({ children, className, glow = false, ...props }: CardProps)
   return (
     <div
       className={cn(
-        'rounded-xl bg-[#11141b]/90 border border-[#202634] p-5 backdrop-blur-sm transition-colors duration-150',
-        glow && 'hover:border-[#76b900]/40 hover:shadow-lg hover:shadow-[#76b900]/5',
+        'rounded-xl bg-[#10131c] border border-[#1d2433] p-5 transition-colors duration-150',
+        glow && 'hover:border-emerald-500/40',
         className
       )}
       {...props}
@@ -27,7 +27,7 @@ export function CardHeader({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('flex items-center justify-between gap-4 mb-4 pb-3 border-b border-[#1c2230]', className)} {...props}>
+    <div className={cn('flex items-center justify-between gap-4 mb-4 pb-3 border-b border-[#1a202d]', className)} {...props}>
       {children}
     </div>
   );

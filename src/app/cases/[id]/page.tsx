@@ -19,6 +19,7 @@ import {
   Trash2,
   Play,
   AlertCircle,
+  ShieldAlert,
 } from 'lucide-react';
 import { formatDate, formatBytes } from '@/lib/utils';
 
@@ -33,6 +34,7 @@ export default function CaseDetailPage({ params }: PageProps) {
   const [caseRecord, setCaseRecord] = useState<Case | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
 
   // Active Tab: 'forensics' | 'trace' | 'guardian'
   const [activeTab, setActiveTab] = useState<'forensics' | 'trace' | 'guardian'>('forensics');
@@ -46,9 +48,13 @@ export default function CaseDetailPage({ params }: PageProps) {
     try {
       setIsLoading(true);
       setError(null);
+      setIsUnauthorized(false);
       const res = await fetch(`/api/cases/${id}`);
       const data = await res.json();
       if (!res.ok) {
+        if (res.status === 403) {
+          setIsUnauthorized(true);
+        }
         throw new Error(data.error?.message || 'Failed to retrieve case');
       }
       setCaseRecord(data.data);
@@ -67,6 +73,9 @@ export default function CaseDetailPage({ params }: PageProps) {
         const data = await res.json();
         if (!ignore) {
           if (!res.ok) {
+            if (res.status === 403) {
+              setIsUnauthorized(true);
+            }
             setError(data.error?.message || 'Failed to retrieve case');
           } else {
             setCaseRecord(data.data);
@@ -165,8 +174,27 @@ export default function CaseDetailPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-24 text-center space-y-3">
-        <RefreshCw className="w-8 h-8 animate-spin mx-auto text-[#76b900]" />
+        <RefreshCw className="w-8 h-8 animate-spin mx-auto text-emerald-400" />
         <p className="text-sm font-mono text-slate-400">Loading forensic workbench...</p>
+      </div>
+    );
+  }
+
+  if (isUnauthorized) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16 text-center space-y-4">
+        <div className="w-12 h-12 rounded-full bg-amber-950/50 border border-amber-800/60 flex items-center justify-center mx-auto text-amber-400">
+          <ShieldAlert className="w-6 h-6" />
+        </div>
+        <h2 className="text-xl font-bold text-white">Access Restricted (IDOR Protection)</h2>
+        <p className="text-xs text-slate-400">
+          This investigation belongs to another investigator session. Direct object reference is blocked to safeguard private evidentiary metadata.
+        </p>
+        <Link href="/cases">
+          <Button variant="secondary" size="sm" icon={<ArrowLeft className="w-3.5 h-3.5" />}>
+            Back to Case Directory
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -208,11 +236,11 @@ export default function CaseDetailPage({ params }: PageProps) {
       </div>
 
       {/* Case Header Card */}
-      <Card className="border-[#263144] bg-[#0d1017]">
+      <Card className="border-[#202737] bg-[#0c0e14]">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-xs text-[#76b900] bg-[#76b900]/10 px-2.5 py-0.5 rounded border border-[#76b900]/25">
+              <span className="font-mono text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/25">
                 {caseRecord.id}
               </span>
               <Badge status={caseRecord.status} />
@@ -235,14 +263,14 @@ export default function CaseDetailPage({ params }: PageProps) {
           </div>
 
           {/* Quick Timestamps Box */}
-          <div className="text-xs font-mono text-slate-400 bg-[#121622] p-3.5 rounded-lg border border-[#1e2536] shrink-0 space-y-1">
+          <div className="text-xs font-mono text-slate-400 bg-[#11151f] p-3.5 rounded-lg border border-[#1b2230] shrink-0 space-y-1">
             <div>Logged: <span className="text-slate-200">{formatDate(caseRecord.createdAt)}</span></div>
             <div>Updated: <span className="text-slate-200">{formatDate(caseRecord.updatedAt)}</span></div>
           </div>
         </div>
 
         {/* Image Evidence Metadata Bar */}
-        <div className="mt-6 pt-4 border-t border-[#181f2c] grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-mono">
+        <div className="mt-6 pt-4 border-t border-[#171d27] grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-mono">
           <div>
             <span className="text-slate-400 block">File Target</span>
             <span className="text-slate-200 truncate block">{caseRecord.imageMetadata.fileName}</span>
@@ -261,7 +289,7 @@ export default function CaseDetailPage({ params }: PageProps) {
           </div>
           <div>
             <span className="text-slate-400 block">SHA-256 Fingerprint</span>
-            <span className="text-[#76b900] truncate block" title={caseRecord.imageMetadata.sha256Hash}>
+            <span className="text-emerald-400 truncate block" title={caseRecord.imageMetadata.sha256Hash}>
               {caseRecord.imageMetadata.sha256Hash.substring(0, 16)}...
             </span>
           </div>
@@ -269,19 +297,19 @@ export default function CaseDetailPage({ params }: PageProps) {
       </Card>
 
       {/* Primary Workbench Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#1c2230] pb-2 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-[#1b2230] pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('forensics')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors shrink-0 ${
             activeTab === 'forensics'
-              ? 'bg-[#181e2b] text-white border border-[#76b900]/50'
-              : 'text-slate-400 hover:text-white hover:bg-[#11141c]'
+              ? 'bg-[#141924] text-white border border-emerald-500/50'
+              : 'text-slate-400 hover:text-white hover:bg-[#0f121a]'
           }`}
         >
-          <Fingerprint className="w-4 h-4 text-[#76b900]" />
+          <Fingerprint className="w-4 h-4 text-emerald-400" />
           <span>1. Forensic Integrity</span>
           {caseRecord.forensicResult && (
-            <span className="w-2 h-2 rounded-full bg-[#76b900]" />
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
           )}
         </button>
 
@@ -289,14 +317,14 @@ export default function CaseDetailPage({ params }: PageProps) {
           onClick={() => setActiveTab('trace')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors shrink-0 ${
             activeTab === 'trace'
-              ? 'bg-[#181e2b] text-white border border-[#76b900]/50'
-              : 'text-slate-400 hover:text-white hover:bg-[#11141c]'
+              ? 'bg-[#141924] text-white border border-emerald-500/50'
+              : 'text-slate-400 hover:text-white hover:bg-[#0f121a]'
           }`}
         >
-          <Search className="w-4 h-4 text-[#76b900]" />
+          <Search className="w-4 h-4 text-emerald-400" />
           <span>2. Reverse Trace & Discovery</span>
           {caseRecord.traceResult && (
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black text-[#76b900]">
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black text-emerald-400">
               {caseRecord.traceResult.matches.length}
             </span>
           )}
@@ -306,14 +334,14 @@ export default function CaseDetailPage({ params }: PageProps) {
           onClick={() => setActiveTab('guardian')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-colors shrink-0 ${
             activeTab === 'guardian'
-              ? 'bg-[#181e2b] text-white border border-[#76b900]/50'
-              : 'text-slate-400 hover:text-white hover:bg-[#11141c]'
+              ? 'bg-[#141924] text-white border border-emerald-500/50'
+              : 'text-slate-400 hover:text-white hover:bg-[#0f121a]'
           }`}
         >
-          <FileCheck2 className="w-4 h-4 text-[#76b900]" />
+          <FileCheck2 className="w-4 h-4 text-emerald-400" />
           <span>3. Guardian Removal Reports</span>
           {caseRecord.reports.length > 0 && (
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black text-[#76b900]">
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black text-emerald-400">
               {caseRecord.reports.length}
             </span>
           )}
@@ -325,7 +353,7 @@ export default function CaseDetailPage({ params }: PageProps) {
         <div className="space-y-6">
           {!caseRecord.forensicResult ? (
             <Card className="text-center py-16 space-y-6">
-              <div className="w-16 h-16 rounded-full bg-[#151924] border border-[#273248] flex items-center justify-center mx-auto text-[#76b900]">
+              <div className="w-16 h-16 rounded-full bg-[#131722] border border-[#222a3a] flex items-center justify-center mx-auto text-emerald-400">
                 <Fingerprint className="w-8 h-8" />
               </div>
               <div className="space-y-2 max-w-md mx-auto">
@@ -336,9 +364,9 @@ export default function CaseDetailPage({ params }: PageProps) {
               </div>
 
               {/* Simulation Mode Selector */}
-              <div className="max-w-md mx-auto p-4 rounded-xl bg-[#0d1017] border border-[#1e2536] text-left space-y-2">
+              <div className="max-w-md mx-auto p-4 rounded-xl bg-[#0b0e14] border border-[#1b2230] text-left space-y-2">
                 <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
-                  Select Mock Scenario Heuristic:
+                  Select Simulation Scenario Heuristic:
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {[
@@ -352,8 +380,8 @@ export default function CaseDetailPage({ params }: PageProps) {
                       onClick={() => setSimulatedScenario(scen.id as typeof simulatedScenario)}
                       className={`py-1.5 px-2 rounded text-xs font-mono border transition-colors ${
                         simulatedScenario === scen.id
-                          ? 'bg-[#1b2230] text-[#76b900] border-[#76b900]/50'
-                          : 'bg-[#11141b] text-slate-400 border-[#202737] hover:text-white'
+                          ? 'bg-[#161c28] text-emerald-400 border-emerald-500/50'
+                          : 'bg-[#0f121a] text-slate-400 border-[#1a202c] hover:text-white'
                       }`}
                     >
                       {scen.label}
@@ -399,7 +427,7 @@ export default function CaseDetailPage({ params }: PageProps) {
         <div className="space-y-6">
           {!caseRecord.traceResult ? (
             <Card className="text-center py-16 space-y-4">
-              <div className="w-14 h-14 rounded-full bg-[#151924] border border-[#273248] flex items-center justify-center mx-auto text-[#76b900]">
+              <div className="w-14 h-14 rounded-full bg-[#131722] border border-[#222a3a] flex items-center justify-center mx-auto text-emerald-400">
                 <Search className="w-7 h-7" />
               </div>
               <h3 className="text-base font-bold text-white">Reverse Discovery Unexecuted</h3>

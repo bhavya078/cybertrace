@@ -97,11 +97,16 @@ describe('Validation Schemas', () => {
       expect(result.targetUrls).toHaveLength(1);
     });
 
-    it('rejects invalid target URLs', () => {
+    it('rejects invalid or internal target URLs', () => {
       const payload = {
         targetUrls: ['not-a-url'],
       };
-      expect(() => createReportSchema.parse(payload)).toThrow(/Invalid URL/);
+      expect(() => createReportSchema.parse(payload)).toThrow(/valid public HTTP or HTTPS URL/);
+
+      const internalPayload = {
+        targetUrls: ['http://127.0.0.1/admin'],
+      };
+      expect(() => createReportSchema.parse(internalPayload)).toThrow(/valid public HTTP or HTTPS URL/);
     });
   });
 });

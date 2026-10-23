@@ -34,7 +34,7 @@ describe('AI Core Service Mock Adapters', () => {
       expect(result.explanation).toBeTruthy();
       expect(result.limitations.length).toBeGreaterThan(0);
       expect(result.modelInfo.isMock).toBe(true);
-      expect(result.modelInfo.provider).toContain('Mock');
+      expect(result.modelInfo.provider).toContain('Forensic');
     });
 
     it('returns authentic verdict when analyzing an authentic sample', async () => {

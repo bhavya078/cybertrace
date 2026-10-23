@@ -19,7 +19,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    'relative inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#76b900]/40 disabled:opacity-50 disabled:pointer-events-none select-none cursor-pointer';
+    'relative inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50 disabled:opacity-50 disabled:pointer-events-none select-none cursor-pointer';
 
   const sizeStyles = {
     sm: 'text-xs px-3 py-1.5 gap-1.5',
@@ -29,13 +29,13 @@ export function Button({
 
   const variantStyles = {
     primary:
-      'bg-[#76b900] hover:bg-[#85cf00] text-black font-semibold shadow-md shadow-[#76b900]/20 hover:shadow-[#76b900]/30 active:scale-[0.99]',
+      'bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold active:bg-emerald-600 border border-emerald-400/30 shadow-sm',
     secondary:
-      'bg-[#171b24] hover:bg-[#1f2430] text-slate-100 border border-[#262e3f] hover:border-[#38435c] active:scale-[0.99]',
+      'bg-[#151925] hover:bg-[#1c2234] text-slate-100 border border-[#232d42] hover:border-[#344260]',
     outline:
-      'bg-transparent hover:bg-[#171b24]/60 text-slate-300 hover:text-white border border-[#262e3f] hover:border-[#38435c]',
+      'bg-transparent hover:bg-[#151925] text-slate-300 hover:text-white border border-[#232d42] hover:border-[#344260]',
     danger:
-      'bg-rose-900/40 hover:bg-rose-900/60 text-rose-200 border border-rose-800/60 hover:border-rose-700',
+      'bg-rose-950/50 hover:bg-rose-900/60 text-rose-200 border border-rose-800/60 hover:border-rose-700',
     ghost:
       'bg-transparent hover:bg-white/5 text-slate-300 hover:text-white',
   }[variant];

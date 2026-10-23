@@ -5,6 +5,7 @@ export interface FindCasesOptions {
   search?: string;
   limit?: number;
   offset?: number;
+  ownerId?: string;
 }
 
 export interface ICaseRepository {

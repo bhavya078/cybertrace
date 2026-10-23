@@ -34,7 +34,7 @@ export default function DashboardPage() {
       if (!res.ok) {
         throw new Error(data.error?.message || 'Failed to fetch cases');
       }
-      setCases(data.data.cases || []);
+      setCases(data.data?.cases || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error loading cases');
     } finally {
@@ -52,7 +52,7 @@ export default function DashboardPage() {
           if (!res.ok) {
             setError(data.error?.message || 'Failed to fetch cases');
           } else {
-            setCases(data.data.cases || []);
+            setCases(data.data?.cases || []);
           }
           setIsLoading(false);
         }
@@ -82,7 +82,6 @@ export default function DashboardPage() {
         width: fixture.width,
         height: fixture.height,
         sha256Hash: fixture.sha256Hash,
-        previewDataUrl: fixture.sampleSvgPreview,
         isSyntheticFixture: true,
       };
 
@@ -114,14 +113,14 @@ export default function DashboardPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#1f2636]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#1b2230]">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono text-[#76b900] mb-1">
-            <span className="w-2 h-2 rounded-full bg-[#76b900] animate-pulse" />
-            <span>SECURITY OPERATIONS CENTER</span>
+          <div className="flex items-center gap-2 text-xs font-mono text-emerald-400 mb-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>INVESTIGATION OPERATIONS CENTER</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Investigation Dashboard
+            Investigation Overview
           </h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Real-time status of visual forensic audits, network discovery, and legal removal packages.
@@ -152,11 +151,11 @@ export default function DashboardPage() {
         {/* Metric 1 */}
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Total Audits</span>
+            <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Total Investigations</span>
             <FolderGit2 className="w-4 h-4 text-slate-400" />
           </div>
           <div className="mt-2 text-2xl font-bold text-white font-mono">{totalCases}</div>
-          <div className="mt-1 text-[11px] text-slate-400">Cases logged across repository</div>
+          <div className="mt-1 text-[11px] text-slate-400">Cases logged across session</div>
         </Card>
 
         {/* Metric 2 */}
@@ -180,21 +179,26 @@ export default function DashboardPage() {
         </Card>
 
         {/* Metric 4 */}
-        <Card className="p-5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Takedowns Drafted</span>
-            <FileCheck className="w-4 h-4 text-[#76b900]" />
-          </div>
-          <div className="mt-2 text-2xl font-bold text-[#76b900] font-mono">{totalReports}</div>
-          <div className="mt-1 text-[11px] text-slate-400">Unverified notices compiled</div>
-        </Card>
+        <Link href="/reports">
+          <Card className="p-5 hover:border-emerald-500/40 transition-colors cursor-pointer">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Takedowns Drafted</span>
+              <FileCheck className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div className="mt-2 text-2xl font-bold text-emerald-400 font-mono">{totalReports}</div>
+            <div className="mt-1 text-[11px] text-slate-400 flex items-center justify-between">
+              <span>Unverified notices compiled</span>
+              <span className="text-emerald-400 text-xs font-medium">View &rarr;</span>
+            </div>
+          </Card>
+        </Link>
       </div>
 
       {/* Synthetic Test Fixtures Loader Section */}
-      <Card className="border-[#273248] bg-gradient-to-r from-[#11151e] to-[#0c0e14]">
+      <Card className="border-[#222a3a] bg-gradient-to-r from-[#10141e] to-[#0a0c12]">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs font-mono text-[#76b900]">
+            <div className="flex items-center gap-2 text-xs font-mono text-emerald-400">
               <Sparkles className="w-4 h-4" />
               <span>SYNTHETIC DEMONSTRATION WORKBENCH</span>
             </div>
@@ -240,12 +244,12 @@ export default function DashboardPage() {
         <CardHeader>
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-              <FolderGit2 className="w-4 h-4 text-[#76b900]" />
+              <FolderGit2 className="w-4 h-4 text-emerald-400" />
               <CardTitle>Recent Investigation Cases</CardTitle>
             </div>
             <Link
               href="/cases"
-              className="text-xs font-medium text-[#76b900] hover:underline flex items-center gap-1"
+              className="text-xs font-medium text-emerald-400 hover:underline flex items-center gap-1"
             >
               <span>View All Cases</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -255,7 +259,7 @@ export default function DashboardPage() {
 
         {isLoading ? (
           <div className="text-center py-12 text-slate-400 space-y-2">
-            <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#76b900]" />
+            <RefreshCw className="w-6 h-6 animate-spin mx-auto text-emerald-400" />
             <p className="text-xs font-mono">Loading cases from repository...</p>
           </div>
         ) : error ? (
@@ -272,7 +276,7 @@ export default function DashboardPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#0b0e14] text-slate-400 font-mono border-b border-[#1b2230]">
+              <thead className="bg-[#0b0d13] text-slate-400 font-mono border-b border-[#1a202c]">
                 <tr>
                   <th className="py-3 px-4">Case ID & Title</th>
                   <th className="py-3 px-4">File Details</th>
@@ -282,9 +286,9 @@ export default function DashboardPage() {
                   <th className="py-3 px-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#171d29]">
+              <tbody className="divide-y divide-[#151b26]">
                 {cases.slice(0, 6).map((c) => (
-                  <tr key={c.id} className="hover:bg-[#151923]/60 transition-colors">
+                  <tr key={c.id} className="hover:bg-[#131722]/60 transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="font-semibold text-white">{c.title}</div>
                       <div className="text-[11px] font-mono text-slate-400">{c.id}</div>
@@ -311,10 +315,10 @@ export default function DashboardPage() {
                     <td className="py-3.5 px-4 text-right">
                       <Link
                         href={`/cases/${c.id}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#171c26] hover:bg-[#202735] text-slate-200 hover:text-white border border-[#273247] transition-colors"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#151924] hover:bg-[#1c2232] text-slate-200 hover:text-white border border-[#242e42] transition-colors"
                       >
                         <span>Inspect</span>
-                        <ArrowRight className="w-3 h-3 text-[#76b900]" />
+                        <ArrowRight className="w-3 h-3 text-emerald-400" />
                       </Link>
                     </td>
                   </tr>

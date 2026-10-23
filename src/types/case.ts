@@ -17,11 +17,13 @@ export interface ImageMetadata {
   width?: number;
   height?: number;
   sha256Hash: string;
-  previewDataUrl?: string; // transient preview during browser session
+  // Note: Raw image binaries or Base64 data URLs are never persisted on the server
+  // to ensure strict victim privacy.
 }
 
 export interface Case {
   id: string;
+  ownerId?: string; // Authenticated investigator session ID
   title: string;
   description?: string;
   status: CaseStatus;
@@ -43,6 +45,6 @@ export interface CreateCaseInput {
   width?: number;
   height?: number;
   sha256Hash: string;
-  previewDataUrl?: string;
+  ownerId?: string;
   isSyntheticFixture?: boolean;
 }

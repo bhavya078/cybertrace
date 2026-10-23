@@ -22,7 +22,7 @@ export function Badge({
   className,
   showDot = true,
 }: BadgeProps) {
-  let colorStyles = 'bg-[#181c25] text-slate-300 border-[#2b3345]';
+  let colorStyles = 'bg-[#151924] text-slate-300 border-[#222b3d]';
   let dotColor = 'bg-slate-400';
   let label = children;
 
@@ -30,22 +30,22 @@ export function Badge({
     switch (status) {
       case 'flagged':
         colorStyles = 'bg-rose-950/40 text-rose-300 border-rose-800/60';
-        dotColor = 'bg-rose-500 animate-pulse';
+        dotColor = 'bg-rose-500';
         label = label || 'Tampering Suspected';
         break;
       case 'completed':
-        colorStyles = 'bg-emerald-950/40 text-[#76b900] border-emerald-800/60';
-        dotColor = 'bg-[#76b900]';
+        colorStyles = 'bg-emerald-950/40 text-emerald-400 border-emerald-800/60';
+        dotColor = 'bg-emerald-400';
         label = label || 'Completed';
         break;
       case 'analyzing':
         colorStyles = 'bg-amber-950/40 text-amber-300 border-amber-800/60';
-        dotColor = 'bg-amber-400 animate-ping';
+        dotColor = 'bg-amber-400 animate-pulse';
         label = label || 'Analyzing';
         break;
       case 'analysis_pending':
-        colorStyles = 'bg-blue-950/40 text-blue-300 border-blue-800/60';
-        dotColor = 'bg-blue-400';
+        colorStyles = 'bg-slate-900 text-slate-300 border-slate-700/70';
+        dotColor = 'bg-slate-400';
         label = label || 'Analysis Pending';
         break;
       case 'submitted':
@@ -54,7 +54,7 @@ export function Badge({
         label = label || 'Submitted';
         break;
       default:
-        colorStyles = 'bg-[#181c25] text-slate-300 border-[#2b3345]';
+        colorStyles = 'bg-[#151924] text-slate-300 border-[#222b3d]';
         dotColor = 'bg-slate-400';
         label = label || status;
     }
@@ -66,8 +66,8 @@ export function Badge({
         label = label || 'Manipulation Suspected';
         break;
       case 'authentic_candidate':
-        colorStyles = 'bg-emerald-950/50 text-[#76b900] border-emerald-800/70';
-        dotColor = 'bg-[#76b900]';
+        colorStyles = 'bg-emerald-950/50 text-emerald-400 border-emerald-800/70';
+        dotColor = 'bg-emerald-400';
         label = label || 'Authentic Candidate';
         break;
       case 'inconclusive':
@@ -76,8 +76,8 @@ export function Badge({
         label = label || 'Inconclusive / Mixed';
         break;
       default:
-        colorStyles = 'bg-blue-950/50 text-blue-300 border-blue-800/70';
-        dotColor = 'bg-blue-400';
+        colorStyles = 'bg-slate-900 text-slate-300 border-slate-700/70';
+        dotColor = 'bg-slate-400';
         label = label || 'Analysis Pending';
     }
   } else if (severity) {
@@ -98,7 +98,7 @@ export function Badge({
         label = label || 'Low Risk';
         break;
       default:
-        colorStyles = 'bg-[#181c25] text-slate-400 border-[#2b3345]';
+        colorStyles = 'bg-[#151924] text-slate-400 border-[#222b3d]';
         dotColor = 'bg-slate-500';
         label = label || severity;
     }
@@ -122,7 +122,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border tracking-wide',
+        'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border tracking-wide select-none',
         colorStyles,
         className
       )}

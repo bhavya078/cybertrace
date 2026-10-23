@@ -83,7 +83,6 @@ export const INITIAL_DEMO_CASES: Case[] = [
       width: 1024,
       height: 1024,
       sha256Hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-      previewDataUrl: SYNTHETIC_FIXTURE_PRESETS[0].sampleSvgPreview,
     },
     forensicResult: {
       id: 'ana_demo_01',
@@ -128,9 +127,9 @@ export const INITIAL_DEMO_CASES: Case[] = [
         'Final legal determination requires human forensic specialist corroboration.',
       ],
       modelInfo: {
-        provider: 'CyberTrace Mock Heuristic Engine (NVIDIA Architecture Ready)',
-        modelName: 'mock-forensics-analyzer-v1',
-        version: '1.0.0-mock',
+        provider: 'CyberTrace Forensic Engine (Heuristic Simulation v1.0)',
+        modelName: 'forensic-heuristic-v1',
+        version: '1.0.0',
         isMock: true,
       },
     },
@@ -237,7 +236,6 @@ export const INITIAL_DEMO_CASES: Case[] = [
       width: 1200,
       height: 1600,
       sha256Hash: 'a1b2c3d4e5f60718293a4b5c6d7e8f901234567890abcdef1234567890abcdef',
-      previewDataUrl: SYNTHETIC_FIXTURE_PRESETS[1].sampleSvgPreview,
     },
     reports: [],
   },
