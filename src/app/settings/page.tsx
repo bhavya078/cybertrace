@@ -235,16 +235,16 @@ export default function SettingsPage() {
 
               <div className="p-3 rounded-lg bg-[#0c0e14] border border-[#1b212d] flex items-center justify-between">
                 <div>
-                  <div className="font-semibold text-white">Token Bucket Rate Limiting</div>
-                  <div className="text-[11px] text-slate-400">Sliding window rate protection across all API routes</div>
+                  <div className="font-semibold text-white">Rate Protection Shield</div>
+                  <div className="text-[11px] text-slate-400">Automated request throttling to prevent enumeration attacks</div>
                 </div>
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
               </div>
 
               <div className="p-3 rounded-lg bg-[#0c0e14] border border-[#1b212d] flex items-center justify-between">
                 <div>
-                  <div className="font-semibold text-white">Strict Cache-Control</div>
-                  <div className="text-[11px] text-slate-400">Enforces no-store, no-cache on private case endpoints</div>
+                  <div className="font-semibold text-white">Strict Privacy Headers</div>
+                  <div className="text-[11px] text-slate-400">Client-only non-caching policies prevent evidentiary data leaks</div>
                 </div>
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
               </div>

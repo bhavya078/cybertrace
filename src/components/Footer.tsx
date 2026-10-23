@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Lock, ExternalLink, Cpu } from 'lucide-react';
+import { ShieldCheck, Lock, ShieldAlert } from 'lucide-react';
 import { APP_METADATA } from '@/lib/constants';
 
 export function Footer() {
@@ -32,28 +32,15 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Col 3: Architecture & System Status */}
+          {/* Col 3: Standards & Compliance */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-slate-200 font-medium">
-              <Cpu className="w-4 h-4 text-emerald-400" />
-              <span>System Health & Standards</span>
+              <ShieldAlert className="w-4 h-4 text-emerald-400" />
+              <span>Notice Verification Standards</span>
             </div>
-            <div className="space-y-1.5 font-mono text-[11px]">
-              <div className="flex items-center justify-between py-0.5 border-b border-[#141822]">
-                <span className="text-slate-400">Health Endpoint</span>
-                <Link
-                  href="/api/health"
-                  target="_blank"
-                  className="text-emerald-400 hover:underline flex items-center gap-1"
-                >
-                  /api/health <ExternalLink className="w-3 h-3" />
-                </Link>
-              </div>
-              <div className="flex items-center justify-between py-0.5">
-                <span className="text-slate-400">Architecture</span>
-                <span className="text-slate-200">Modular Next.js Platform</span>
-              </div>
-            </div>
+            <p className="text-slate-400 text-xs leading-relaxed">
+              Removal notice packages adhere to formal statutory frameworks (DMCA 17 U.S.C. § 512, Right of Publicity). Platform removals are never presumed until verified by confirmation receipts.
+            </p>
           </div>
         </div>
 
@@ -64,7 +51,7 @@ export function Footer() {
           <div className="flex items-center gap-4">
             <span className="text-emerald-400 font-mono">v{APP_METADATA.version}</span>
             <span>•</span>
-            <span>Zero Server Retention Active</span>
+            <span>Zero Server Media Retention Active</span>
             <span>•</span>
             <Link href="/settings" className="hover:text-slate-200 underline">
               Settings & Privacy

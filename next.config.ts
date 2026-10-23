@@ -2,14 +2,14 @@ import type { NextConfig } from 'next';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Strict Content Security Policy
+// Content Security Policy
 const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-eval' 'unsafe-inline';
   style-src 'self' 'unsafe-inline';
   img-src 'self' blob: data: https:;
-  font-src 'self';
-  connect-src 'self';
+  font-src 'self' data:;
+  connect-src 'self' ws: wss: http: https:;
   frame-ancestors 'none';
   object-src 'none';
   base-uri 'self';
