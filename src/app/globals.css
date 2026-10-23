@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-primary: #08090d;
+    --bg-surface: #11141b;
+    --bg-surface-raised: #171b24;
+    --border-subtle: #202634;
+    --border-accent: #2d364a;
+    --nvidia-green: #76b900;
+    --nvidia-glow: rgba(118, 185, 0, 0.25);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0d0f14;
+}
+::-webkit-scrollbar-thumb {
+  background: #202634;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2f384c;
+}
+
+/* Subtle grid line decoration */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+.glow-nvidia {
+  box-shadow: 0 0 25px -4px rgba(118, 185, 0, 0.35);
+}
+
+.glow-nvidia-subtle {
+  box-shadow: 0 0 15px -3px rgba(118, 185, 0, 0.15);
+}

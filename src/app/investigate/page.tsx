@@ -1,0 +1,373 @@
+'use client';
+
+import React, { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, CardHeader, CardTitle } from '@/components/Card';
+import { Button } from '@/components/Button';
+import {
+  Upload,
+  Image as ImageIcon,
+  ShieldCheck,
+  AlertCircle,
+  FileCheck2,
+  Lock,
+  Sparkles,
+  Info,
+} from 'lucide-react';
+import { ACCEPTED_IMAGE_TYPES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB } from '@/lib/constants';
+import { formatBytes } from '@/lib/utils';
+import { SYNTHETIC_FIXTURE_PRESETS, SyntheticFixturePreset } from '@/lib/fixtures';
+
+export default function InvestigatePage() {
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Form states
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fileSha256, setFileSha256] = useState<string>('');
+  const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [isSynthetic, setIsSynthetic] = useState(false);
+
+  // Status & Validation states
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCalculatingHash, setIsCalculatingHash] = useState(false);
+
+  // Compute SHA-256 in browser using Web Crypto API
+  const calculateSha256 = async (blob: Blob): Promise<string> => {
+    const buffer = await blob.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  const handleFileProcess = async (selectedFile: File) => {
+    setError(null);
+
+    // Validate MIME type
+    if (!ACCEPTED_IMAGE_TYPES.includes(selectedFile.type as (typeof ACCEPTED_IMAGE_TYPES)[number])) {
+      setError(`Invalid file format. Accepted types: ${ACCEPTED_IMAGE_TYPES.map((t) => t.replace('image/', '.')).join(', ')}`);
+      return;
+    }
+
+    // Validate file size
+    if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
+      setError(`File exceeds maximum size limit of ${MAX_FILE_SIZE_MB}MB (${formatBytes(selectedFile.size)})`);
+      return;
+    }
+
+    setFile(selectedFile);
+    setIsSynthetic(false);
+    if (!title) {
+      setTitle(`Investigation: ${selectedFile.name.replace(/\.[^/.]+$/, '')}`);
+    }
+
+    // Generate browser preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setPreviewUrl(result);
+
+      // Measure dimensions
+      const img = new Image();
+      img.onload = () => {
+        setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+      };
+      img.src = result;
+    };
+    reader.readAsDataURL(selectedFile);
+
+    // Calculate SHA-256
+    setIsCalculatingHash(true);
+    try {
+      const hash = await calculateSha256(selectedFile);
+      setFileSha256(hash);
+    } catch {
+      setError('Unable to compute cryptographic hash for the file.');
+    } finally {
+      setIsCalculatingHash(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileProcess(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleSelectPreset = (preset: SyntheticFixturePreset) => {
+    setError(null);
+    setFile(null);
+    setTitle(preset.name);
+    setDescription(preset.description);
+    setPreviewUrl(preset.sampleSvgPreview);
+    setFileSha256(preset.sha256Hash);
+    setImageDimensions({ width: preset.width, height: preset.height });
+    setIsSynthetic(true);
+  };
+
+  const handleSubmitCase = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!title.trim()) {
+      setError('Case title is required.');
+      return;
+    }
+
+    if (!previewUrl || !fileSha256) {
+      setError('Please select an image file or choose a synthetic fixture first.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const payload = {
+        title: title.trim(),
+        description: description.trim(),
+        fileName: file ? file.name : `${title.toLowerCase().replace(/\s+/g, '_')}.png`,
+        mimeType: file ? file.type : 'image/png',
+        fileSize: file ? file.size : 1024 * 500,
+        width: imageDimensions?.width || 800,
+        height: imageDimensions?.height || 800,
+        sha256Hash: fileSha256,
+        previewDataUrl: previewUrl,
+        isSyntheticFixture: isSynthetic,
+      };
+
+      const res = await fetch('/api/cases', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error?.message || 'Failed to initialize case');
+      }
+
+      // Navigate to the newly created case detail workbench
+      router.push(`/cases/${data.data.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error submitting case');
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Page Header */}
+      <div className="pb-6 border-b border-[#1f2636] space-y-2">
+        <div className="flex items-center gap-2 text-xs font-mono text-[#76b900]">
+          <ShieldCheck className="w-4 h-4" />
+          <span>INTAKE & TRIAGE PROTOCOL</span>
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          Initiate Visual Forensic Case
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-400">
+          Upload a suspicious image or pick a synthetic sample to analyze manipulation indicators and discover syndication.
+        </p>
+      </div>
+
+      {/* Ephemeral Privacy Notice */}
+      <div className="rounded-xl border border-[#232c3d] bg-[#0f131a] p-4 flex items-start gap-3">
+        <Lock className="w-5 h-5 text-[#76b900] shrink-0 mt-0.5" />
+        <div className="space-y-1 text-xs text-slate-300">
+          <div className="font-semibold text-white">Client-Side Privacy Guarantee</div>
+          <p className="text-slate-400 leading-relaxed">
+            Victim visual media is processed and previewed within your local browser sandbox. Only extracted mathematical indicators and the 64-character SHA-256 fingerprint are transmitted to the case record.
+          </p>
+        </div>
+      </div>
+
+      {/* Synthetic Fixtures Carousel / Quick Selector */}
+      <Card className="border-[#283449] bg-[#0c1017]">
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#192130]">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#76b900]" />
+            <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-200">
+              Demo Test Fixtures (Zero-Risk Presets)
+            </h3>
+          </div>
+          <span className="text-[11px] text-slate-400">Click to instantly populate</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {SYNTHETIC_FIXTURE_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => handleSelectPreset(preset)}
+              className="text-left p-3 rounded-lg bg-[#121622] hover:bg-[#181d2c] border border-[#202738] hover:border-[#76b900]/40 transition-all group"
+            >
+              <div className="font-semibold text-xs text-white group-hover:text-[#76b900] transition-colors">
+                {preset.name}
+              </div>
+              <div className="text-[11px] text-slate-400 line-clamp-2 mt-1">
+                {preset.tagline}
+              </div>
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {/* Main Intake Form */}
+      <form onSubmit={handleSubmitCase} className="space-y-6">
+        {/* Dropzone & Preview Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* File Dropzone */}
+          <Card
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+            className={`border-2 border-dashed flex flex-col items-center justify-center p-8 text-center transition-colors min-h-[320px] ${
+              previewUrl ? 'border-[#263144]' : 'border-[#2c384e] hover:border-[#76b900]/60'
+            }`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPTED_IMAGE_TYPES.join(',')}
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  handleFileProcess(e.target.files[0]);
+                }
+              }}
+            />
+
+            <div className="w-14 h-14 rounded-full bg-[#151924] border border-[#263144] flex items-center justify-center text-[#76b900] mb-4">
+              <Upload className="w-6 h-6" />
+            </div>
+
+            <h4 className="text-sm font-semibold text-white mb-1">
+              Select or drag image file here
+            </h4>
+            <p className="text-xs text-slate-400 max-w-xs mb-4">
+              Supports JPEG, PNG, WebP up to {MAX_FILE_SIZE_MB}MB
+            </p>
+
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Browse Files
+            </Button>
+          </Card>
+
+          {/* Inspection Preview Panel */}
+          <Card className="flex flex-col justify-between">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-[#76b900]" />
+                <CardTitle>Browser Sandbox Preview</CardTitle>
+              </div>
+              {isSynthetic && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#76b900]/15 text-[#76b900] border border-[#76b900]/30">
+                  SYNTHETIC FIXTURE
+                </span>
+              )}
+            </CardHeader>
+
+            <div className="flex-1 flex items-center justify-center bg-[#090b10] rounded-lg border border-[#1b2230] p-4 min-h-[220px]">
+              {previewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={previewUrl}
+                  alt="Inspection target preview"
+                  className="max-h-56 max-w-full object-contain rounded border border-[#21293a]"
+                />
+              ) : (
+                <div className="text-center text-slate-400 text-xs space-y-1">
+                  <ImageIcon className="w-8 h-8 mx-auto opacity-30" />
+                  <p>No image loaded yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Extracted Metadata Inspection */}
+            {fileSha256 && (
+              <div className="mt-4 pt-3 border-t border-[#1a212e] space-y-1.5 text-[11px] font-mono">
+                <div className="flex items-center justify-between text-slate-400">
+                  <span>SHA-256 Digest:</span>
+                  <span className="text-slate-200 truncate max-w-[240px]">{fileSha256}</span>
+                </div>
+                {imageDimensions && (
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span>Dimensions:</span>
+                    <span className="text-slate-200">
+                      {imageDimensions.width} × {imageDimensions.height} px
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* Case Details Inputs */}
+        <Card className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              Case Title *
+            </label>
+            <input
+              type="text"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Suspected Manipulated Executive Avatar"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-[#0c0f16] border border-[#202737] focus:border-[#76b900] focus:outline-none text-white text-sm placeholder:text-slate-400 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              Investigation Context & Notes (Optional)
+            </label>
+            <textarea
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Add details regarding observed circulation context, platform origins, or suspected motive..."
+              className="w-full px-3.5 py-2.5 rounded-lg bg-[#0c0f16] border border-[#202737] focus:border-[#76b900] focus:outline-none text-white text-sm placeholder:text-slate-400 transition-colors resize-none"
+            />
+          </div>
+        </Card>
+
+        {/* Error notification */}
+        {error && (
+          <div className="p-4 rounded-lg bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Form Actions */}
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <Info className="w-4 h-4 text-slate-400" />
+            <span>Submission registers a case with initial status: &apos;Analysis pending&apos;.</span>
+          </div>
+
+          <Button
+            type="submit"
+            isLoading={isSubmitting || isCalculatingHash}
+            disabled={!previewUrl}
+            icon={<FileCheck2 className="w-4 h-4" />}
+          >
+            Create Investigation Case
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}
